@@ -19,7 +19,7 @@ async def run_sync_periodically():
                 async with EventsProviderClient() as client:
                     repo = SQLAlchemyEventRepository(db)
                     service = SyncService(repo=repo, client=client)
-                    result = await service.sync_events()
+                    await service.sync_events()
                     logger.info("Синхронизация завершена")
         except Exception as e:
             logger.error(f"Ошибка в воркере: {e}")
