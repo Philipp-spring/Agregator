@@ -29,7 +29,7 @@ async def get_event_service(
     return EventService(db, client)
 
 
-@router.get("/", response_model=PaginatedEventOut)
+@router.get("", response_model=PaginatedEventOut)
 async def get_events(
     request: Request,
     date_from: date | None = Query(None, description="События после указанной даты"),
@@ -43,7 +43,7 @@ async def get_events(
 
 
 
-@router.get("/{event_id}/", response_model=EventDetailOut)
+@router.get("/{event_id}", response_model=EventDetailOut)
 async def get_event(event_id: uuid.UUID,
                     service: EventService = Depends(get_event_service)):
     """получить одно, конкретное событие"""
@@ -51,7 +51,7 @@ async def get_event(event_id: uuid.UUID,
 
 
 
-@router.get("/{event_id}/seats/")
+@router.get("/{event_id}/seats")
 async def get_event_seats(event_id: uuid.UUID,
                           service: EventService = Depends(get_event_service)):
     """Получение списка свободных мест"""

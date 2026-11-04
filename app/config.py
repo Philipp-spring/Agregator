@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     api_key: str = "YOUR_API_KEY"
 
-    api_base_url: str = "https://events-provider.dev-2.python-labs.ru"
+    api_base_url: str = "http://student-system-events-provider-web.student-system-events-provider.svc:8000"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

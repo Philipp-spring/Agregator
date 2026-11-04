@@ -28,7 +28,7 @@ async def get_create_ticket(
 
 
 
-@router.post("/", response_model=TicketOut, status_code=201)
+@router.post("", response_model=TicketOut, status_code=201)
 async def create_ticket(
         ticket_data: TicketCreate,
         service: TicketService = Depends(get_create_ticket)):
@@ -46,7 +46,7 @@ async def create_ticket(
 
 
 
-@router.delete("/{ticket_id}/")
+@router.delete("/{ticket_id}")
 async def cancel_ticket(
         ticket_id: uuid.UUID,
         db: AsyncSession = Depends(get_async_db),
