@@ -18,12 +18,10 @@ class EventsProviderClient:
     async def get_events(self, changed_at: str = "2000-01-01", cursor: str | None = None):
         """Получение мероприятий"""
         if cursor:
-            # Заменяем внешний адрес на внутренний, если он там есть
             if "events-provider" in cursor:
                 cursor = cursor.replace("https://events-provider.dev-2.python-labs.ru", "http://student-system-events-provider-web.student-system-events-provider.svc:8000")
                 cursor = cursor.replace("http://events-provider.dev-2.python-labs.ru", "http://student-system-events-provider-web.student-system-events-provider.svc:8000")
 
-            # Убрали замену http на https!
 
             req = self.client.build_request("GET", cursor)
             response = await self.client.send(req)

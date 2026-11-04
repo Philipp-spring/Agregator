@@ -63,5 +63,7 @@ class TicketService:
             seat=seat
         )
 
+        await self.repo.db.commit()
+
         logger.info(f"Успешная регистрация билета {ticket_id} у провайдера и в локальной БД")
         return ticket_id
