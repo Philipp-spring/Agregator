@@ -1,13 +1,15 @@
-import pytest
 import uuid
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
-from datetime import datetime, UTC, timedelta
 
-from app.services.tickets import TicketService
+import pytest
+from fastapi import HTTPException
+
+from app.clients.provider import EventsProviderClient
 from app.models import Event
 from app.repositories.tickets import SQLAlchemyTicketRepository
-from app.clients.provider import EventsProviderClient
-from fastapi import HTTPException
+from app.services.tickets import TicketService
+
 
 @pytest.mark.asyncio
 async def test_create_ticket_success():
