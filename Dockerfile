@@ -13,14 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 RUN echo '#!/bin/bash\n\
-pg_ctlcluster 15 main start\n\
-sleep 10\n\
-pg_ctlcluster 15 main restart || true\n\
-sleep 3\n\
+pg_ctlcluster 17 main start\n\
+sleep 5\n\
 su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD '\''postgres'\'';\""\n\
 su - postgres -c "psql -c \"CREATE DATABASE aggregator_db;\"" || true\n\
 alembic upgrade head\n\
-echo "Миграции Alembic успешно применены!"\n\
 uvicorn app.main:app --host 0.0.0.0 --port 8000' > /start.sh && chmod +x /start.sh
 
 CMD ["/start.sh"]
