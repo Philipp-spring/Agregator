@@ -2,7 +2,9 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from app.database import async_engine
 from app.routers import events, system, tickets
@@ -10,7 +12,6 @@ from app.workers import run_sync_periodically
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
 
 
 @asynccontextmanager
@@ -30,8 +31,14 @@ async def lifespan(app: FastAPI):
     logger.info("Соединения с БД закрыты")
 
 
-
 app = FastAPI(title="agregator", version="0.1.0", lifespan=lifespan)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": "Ошибка валидации входных данных"}
+    )
 
 
 app.include_router(events.router)
