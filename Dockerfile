@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 RUN echo '#!/bin/bash\n\
-service postgresql start\n\
+pg_ctlcluster 15 main start\n\
 sleep 3\n\
 su - postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD '\''postgres'\'';\""\n\
 su - postgres -c "psql -c \"CREATE DATABASE aggregator_db;\"" || true\n\
