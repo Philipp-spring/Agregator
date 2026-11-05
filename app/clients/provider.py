@@ -19,8 +19,8 @@ class EventsProviderClient:
         """Получение мероприятий"""
         if cursor:
             if "events-provider" in cursor:
-                cursor = cursor.replace("https://events-provider.dev-2.python-labs.ru", "http://student-system-events-provider-web.student-system-events-provider.svc:8000")
-                cursor = cursor.replace("http://events-provider.dev-2.python-labs.ru", "http://student-system-events-provider-web.student-system-events-provider.svc:8000")
+                cursor = cursor.replace("https://events-provider.dev-2.python-labs.ru",  settings.api_base_url)
+                cursor = cursor.replace("http://events-provider.dev-2.python-labs.ru", settings.api_base_url)
 
 
             req = self.client.build_request("GET", cursor)
