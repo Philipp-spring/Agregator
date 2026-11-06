@@ -2,15 +2,21 @@ import httpx
 import pytest
 
 from app.clients.provider import EventsProviderClient
+from app.config import settings
+
+
+@pytest.fixture
+def events_url():
+    """Возвращает URL для запроса событий (универсально для любого окружения)."""
+    return f"{settings.api_base_url}/api/events/?changed_at=2000-01-01"
 
 
 @pytest.mark.asyncio
-async def test_get_events_success(httpx_mock):
+async def test_get_events_success(httpx_mock, events_url):
     """Тест: клиент успешно делает запрос и возвращает JSON."""
     
-    # Меняем URL на тот, который сейчас в config.py
     httpx_mock.add_response(
-        url="http://student-system-events-provider-web.student-system-events-provider.svc:8000/api/events/?changed_at=2000-01-01",
+        url=events_url,
         method="GET",
         json={"results": [{"id": "1", "name": "Тест"}], "next": None},
         status_code=200
@@ -23,12 +29,11 @@ async def test_get_events_success(httpx_mock):
 
 
 @pytest.mark.asyncio
-async def test_get_events_server_error(httpx_mock):
+async def test_get_events_server_error(httpx_mock, events_url):
     """Тест: если сервер вернул 500, клиент выбрасывает ошибку."""
 
-    # Меняем URL на тот, который сейчас в config.py
     httpx_mock.add_response(
-        url="http://student-system-events-provider-web.student-system-events-provider.svc:8000/api/events/?changed_at=2000-01-01",
+        url=events_url,
         method="GET",
         status_code=500
     )

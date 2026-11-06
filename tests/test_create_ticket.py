@@ -3,9 +3,9 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
-from fastapi import HTTPException
 
 from app.clients.provider import EventsProviderClient
+from app.exceptions import EventNotFoundError
 from app.models import Event
 from app.repositories.tickets import SQLAlchemyTicketRepository
 from app.services.tickets import TicketService
@@ -57,13 +57,13 @@ async def test_create_ticket_event_not_found():
     """Тест: если события нет в БД, выбрасывается 404."""
     mock_repo = AsyncMock(spec=SQLAlchemyTicketRepository)
     mock_client = AsyncMock(spec=EventsProviderClient)
-    mock_repo.db = AsyncMock() # тоже добавляем на всякий случай
+    mock_repo.db = AsyncMock() 
     
     mock_repo.get_event.return_value = None
     
     service = TicketService(client=mock_client, repo=mock_repo)
     
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(EventNotFoundError) as exc_info:
         await service.create_ticket(
             event_id=uuid.uuid4(),
             first_name="Александр",
@@ -72,4 +72,4 @@ async def test_create_ticket_event_not_found():
             seat="A1"
         )
     
-    assert exc_info.value.status_code == 404
+    assert str(exc_info.value) == "Событие не найдено"

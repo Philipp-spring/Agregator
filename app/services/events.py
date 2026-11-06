@@ -1,11 +1,13 @@
 import logging
-import time
 import uuid
 
-from fastapi import HTTPException, Request
+import httpx
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.cache import get_cached_seats, set_cached_seats
 from app.clients.provider import EventsProviderClient
+from app.exceptions import EventNotFoundError, EventNotPublishedError, ProviderError
 from app.repositories.events import SQLAlchemyEventRepository
 
 logger = logging.getLogger(__name__)
@@ -17,7 +19,6 @@ class EventService:
         self.repo = SQLAlchemyEventRepository(db)
         self.client = client
 
-        self._seats_cache = {}
 
     async def list_events(self, page, page_size, date_from=None, request: Request = None):
         """функция для эндпоинта, который показывает список всех событий в БД"""
@@ -51,7 +52,7 @@ class EventService:
         """функция для эндпоинта, который показывает одно конкретное событие в БД"""
         event = await self.repo.get_event_by_id(event_id)
         if not event:
-            raise HTTPException(status_code=404, detail="Событие не найдено")
+            raise EventNotFoundError("Событие не найдено")
         return event
 
 
@@ -59,26 +60,20 @@ class EventService:
         """показ список свободных мест  (связывает БД и Внешний API)"""
         event = await self.repo.get_event_by_id(event_id)
         if not event:
-            raise HTTPException(status_code=404, detail="Событие не найдено")
+            raise EventNotFoundError("Событие не найдено")
         if event.status != "published":
-            raise HTTPException(status_code=400, detail="Событие не опубликовано")
+            raise EventNotPublishedError("Событие не опубликовано")
 
 
-        current_time = time.time()
-
-        if event_id in self._seats_cache:
-            cached_data, cached_time = self._seats_cache[event_id]
-            if current_time - cached_time < 30:
-                logger.info(f"Отдаем данные из кэша (ОЗУ) {event_id}")
-                return cached_data
-
+        cached_data = get_cached_seats(event_id)
+        if cached_data is not None:
+            logger.info("Отдаем данные из кэша (ОЗУ) %s", event_id)
+            return cached_data
 
         try:
             seats_data = await self.client.get_seats(event_id)
             result = {"event_id": event_id, "available_seats": seats_data.get("seats", [])}
-            self._seats_cache[event_id] = (result, current_time)
-
+            set_cached_seats(event_id, result)
             return result
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
+        except httpx.HTTPError as e:
+            raise ProviderError(f"Не удалось получить места: {e}")

@@ -32,7 +32,7 @@ async def get_event_service(
 @router.get("", response_model=PaginatedEventOut)
 async def get_events(
     request: Request,
-    date_from: date | None = Query(None, description="События после указанной даты"),
+    date_from: date | None = Query(None, description="Дата для фильтрации"),
 
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),

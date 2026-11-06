@@ -2,9 +2,17 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import HTTPException
+import httpx
 
 from app.clients.provider import EventsProviderClient
+from app.exceptions import (
+    EventNotFoundError,
+    EventNotPublishedError,
+    ProviderError,
+    RegistrationDeadlinePassedError,
+    SeatNotAvailableError,
+    TicketIdMissingError,
+)
 from app.repositories.tickets import SQLAlchemyTicketRepository
 
 logger = logging.getLogger(__name__)
@@ -20,24 +28,24 @@ class TicketService:
         event = await self.repo.get_event(event_id)
         if not event:
             logger.warning(f"Попытка регистрации на несуществующее событие {event_id}")
-            raise HTTPException(status_code=404, detail="Событие не найдено")
+            raise EventNotFoundError("Событие не найдено")
 
         if event.status != "published":
-            raise HTTPException(status_code=400, detail="Регистрация доступна только для опубликованных событий")
+            raise EventNotPublishedError("Регистрация доступна только для опубликованных событий")
 
 
         now = datetime.now(UTC)
         deadline = event.registration_deadline.astimezone(UTC)
         if now >= deadline:
-            raise HTTPException(status_code=400, detail="Срок регистрации на это мероприятие истек")
+            raise RegistrationDeadlinePassedError("Срок регистрации на это мероприятие истек")
         try:
             seats_data = await self.client.get_seats(event_id)
             if seat not in seats_data.get("seats", []):
-                raise HTTPException(status_code=400, detail=f"Место {seat} занято или не существует")
-        except HTTPException:
+                raise SeatNotAvailableError(f"Место {seat} занято или не существует")
+        except SeatNotAvailableError:
             raise
-        except Exception as e:
-            logger.warning(f"Не удалось проверить места: {e}")
+        except httpx.HTTPError as e:
+            logger.warning("Не удалось проверить места: %s", e)
 
         try:
             response_data = await self.client.register(
@@ -47,12 +55,12 @@ class TicketService:
                 email=email,
                 seat=seat
             )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Ошибка регистрации: {str(e)}")
+        except httpx.HTTPError as e:
+            raise ProviderError(f"Ошибка регистрации: {e}")
 
         ticket_id = response_data.get("ticket_id")
         if not ticket_id:
-            raise HTTPException(status_code=500, detail="Внешний API не вернул ticket_id")
+            raise TicketIdMissingError("Внешний API не вернул ticket_id")
 
         await self.repo.create(
             event_id=event_id,
