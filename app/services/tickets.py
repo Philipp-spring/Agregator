@@ -27,7 +27,7 @@ class TicketService:
     async def create_ticket(self, event_id: uuid.UUID, first_name: str, last_name: str, email: str, seat: str) -> str:
         event = await self.repo.get_event(event_id)
         if not event:
-            logger.warning(f"Попытка регистрации на несуществующее событие {event_id}")
+            logger.warning("Попытка регистрации на несуществующее событие %s", event_id)
             raise EventNotFoundError("Событие не найдено")
 
         if event.status != "published":
@@ -73,5 +73,5 @@ class TicketService:
 
         await self.repo.db.commit()
 
-        logger.info(f"Успешная регистрация билета {ticket_id} у провайдера и в локальной БД")
+        logger.info("Успешная регистрация билета %s у провайдера и в локальной БД", ticket_id)
         return ticket_id

@@ -33,13 +33,33 @@ async def get_event_service(
 async def get_events(
     request: Request,
     date_from: date | None = Query(None, description="Дата для фильтрации"),
-
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: EventService = Depends(get_event_service)
 ):
     """Получение всех событий"""
-    return await service.list_events(page, page_size, date_from, request)
+    data = await service.list_events(page, page_size, date_from)
+
+    base_url = str(request.base_url).rstrip("/")
+    next_url = None
+    previous_url = None
+
+    if (page * page_size) < data["count"]:
+        next_url = f"{base_url}/api/events/?page={page + 1}&page_size={page_size}"
+        if date_from:
+            next_url += f"&date_from={date_from}"
+
+    if page > 1:
+        previous_url = f"{base_url}/api/events/?page={page - 1}&page_size={page_size}"
+        if date_from:
+            previous_url += f"&date_from={date_from}"
+
+    return {
+        "count": data["count"],
+        "next": next_url,
+        "previous": previous_url,
+        "results": data["results"],
+    }
 
 
 

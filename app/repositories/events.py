@@ -1,4 +1,3 @@
-# Репозиторий - это модуль, который формирует запросы к нашей БД
 from datetime import UTC, date, datetime
 from uuid import UUID
 
@@ -6,54 +5,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Event, Place, SyncMetadata
+from app.models import Event, SyncMetadata
 
 
 class SQLAlchemyEventRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-
-
-
-    async def get_existing_events_by_ids(self, event_ids: set[str]) -> dict[str, Event]:
-        """Поиск событий в БД, которые там уже есть"""
-        if not event_ids:
-            return {}
-        stmt = select(Event).where(Event.id.in_(event_ids))
-        result = await self.db.scalars(stmt)
-        return {event.id: event for event in result.all()}
-
-
-    async def get_existing_places_by_ids(self, place_ids: set[str]) -> dict[str, Place]:
-        if not place_ids:
-            return {}
-        stmt = select(Place).where(Place.id.in_(place_ids))
-        result = await self.db.scalars(stmt)
-        return {place.id: place for place in result.all()}
-
-
-    async def create_event(self, event: Event) -> None:
-        self.db.add(event)
-
-
-    async def create_events(self, events: list[Event]) -> None:
-        if events: self.db.add_all(events)
-
-
-    async def create_place(self, place: Place) -> None:
-        self.db.add(place)
-
-
-    async def create_places(self, places: list[Place]) -> None:
-        if places: self.db.add_all(places)
-
-
-    async def merge_event(self, event: Event) -> Event:
-        return await self.db.merge(event)
-
-
-    async def flush(self) -> None:
-        await self.db.flush()
 
 
     async def commit(self) -> None:

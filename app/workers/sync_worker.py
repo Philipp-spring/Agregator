@@ -1,4 +1,3 @@
-# Цикл синхронизации
 import asyncio
 import logging
 
@@ -22,6 +21,7 @@ async def run_sync_periodically():
                     await service.sync_events()
                     logger.info("Синхронизация завершена")
         except Exception as e:
-            logger.error(f"Ошибка в воркере: {e}")
+            logger.error("Ошибка в воркере: %s" , e, exc_info=True)
+
 
         await asyncio.sleep(86400)

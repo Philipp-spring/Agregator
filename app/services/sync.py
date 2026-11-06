@@ -16,7 +16,7 @@ class SyncService:
         self.client = client
 
 
-    def _parse_datetime(self, iso_string: str) -> datetime:
+    def _parse_datetime(self, iso_string: str) -> datetime | None:
         """Берем дату и переводим её к общему часовому поясу UTC"""
         if not iso_string:
             return None
@@ -83,13 +83,14 @@ class SyncService:
                 status="success",
                 last_sync=datetime.now(UTC),
                 last_changed=max_changed_at
-            )
-            logger.info(f"Синхронизация завершена. Обработано: {total_synced}")
+            ) 
+            logger.info("Синхронизация завершена. Обработано: %s", total_synced)
+
 
         except Exception as e:
             await self.repo.update_sync_metadata(status="failed")
-            logger.error(f"Ошибка: {e}", exc_info=True)
-            raise e
+            logger.error("Ошибка: %s", e, exc_info=True)
+            raise 
 
 
     async def _save_batch(self, places: list[Place], events: list[Event]):

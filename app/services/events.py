@@ -2,7 +2,6 @@ import logging
 import uuid
 
 import httpx
-from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache import get_cached_seats, set_cached_seats
@@ -20,31 +19,12 @@ class EventService:
         self.client = client
 
 
-    async def list_events(self, page, page_size, date_from=None, request: Request = None):
+    async def list_events(self, page, page_size, date_from=None):
         """функция для эндпоинта, который показывает список всех событий в БД"""
-        events, total = await self.repo.get_events_with_filters(page=page, page_size=page_size, date_from=date_from)
-
-        next_url = None
-        previous_url = None
-
-        if request:
-            base_url = str(request.base_url).rstrip("/")
-            
-
-            if (page * page_size) < total:
-                next_url = f"{base_url}/api/events/?page={page + 1}&page_size={page_size}"
-                if date_from:
-                    next_url += f"&date_from={date_from}"
-
-            if page > 1:
-                previous_url = f"{base_url}/api/events/?page={page - 1}&page_size={page_size}"
-                if date_from:
-                    previous_url += f"&date_from={date_from}"
-        
-        return {"count": total,
-                "next": next_url,
-                "previous": previous_url,
-                "results": events}
+        events, total = await self.repo.get_events_with_filters(
+                page=page, page_size=page_size, date_from=date_from
+        )
+        return {"count": total, "results": events}
 
 
 
