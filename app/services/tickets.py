@@ -40,12 +40,11 @@ class TicketService:
             raise RegistrationDeadlinePassedError("Срок регистрации на это мероприятие истек")
         try:
             seats_data = await self.client.get_seats(event_id)
-            if seat not in seats_data.get("seats", []):
-                raise SeatNotAvailableError(f"Место {seat} занято или не существует")
-        except SeatNotAvailableError:
-            raise
         except httpx.HTTPError as e:
-            logger.warning("Не удалось проверить места: %s", e)
+            raise ProviderError(f"Не удалось проверить места: {e}")
+
+        if seat not in seats_data.get("seats", []):
+            raise SeatNotAvailableError(f"Место {seat} занято или не существует")
 
         try:
             response_data = await self.client.register(
