@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache import get_cached_seats, set_cached_seats
 from app.clients.provider import EventsProviderClient
+from app.enums import EventStatus
 from app.exceptions import EventNotFoundError, EventNotPublishedError, ProviderError
 from app.repositories.events import SQLAlchemyEventRepository
 
@@ -41,7 +42,7 @@ class EventService:
         event = await self.repo.get_event_by_id(event_id)
         if not event:
             raise EventNotFoundError("Событие не найдено")
-        if event.status != "published":
+        if event.status != EventStatus.PUBLISHED.value:
             raise EventNotPublishedError("Событие не опубликовано")
 
 

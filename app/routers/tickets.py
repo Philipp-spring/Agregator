@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.provider import EventsProviderClient
@@ -48,27 +48,10 @@ async def create_ticket(
 
 @router.delete("/{ticket_id}")
 async def cancel_ticket(
-        ticket_id: uuid.UUID,
-        db: AsyncSession = Depends(get_async_db),
-        client: EventsProviderClient = Depends(get_events_client)
-):
+        ticket_id: uuid.UUID, 
+        service: TicketService = Depends(get_create_ticket)):
     """Отмена регистрации (билета)"""
-    repo = SQLAlchemyTicketRepository(db)
-
-    try:
-        ticket = await repo.get_ticket_by_id(ticket_id)
-        if not ticket:
-            raise HTTPException(status_code=404, detail="Билет не найден")
-
-        await client.unregister(ticket.event_id, ticket_id)
-
-        await repo.delete(ticket_id)
-        await db.commit()
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Не удалось отменить билет: {str(e)}")
-
+    await service.cancel_ticket(ticket_id)
     return {"success": True}
 
 

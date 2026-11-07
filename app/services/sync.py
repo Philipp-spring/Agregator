@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.clients.paginator import EventsPaginator
 from app.clients.provider import EventsProviderClient
+from app.enums import SyncStatus
 from app.models import Event, Place
 from app.repositories.events import SQLAlchemyEventRepository
 
@@ -25,7 +26,7 @@ class SyncService:
 
     async def sync_events(self):
         """Синхронизация"""
-        await self.repo.update_sync_metadata(status="in_progress")
+        await self.repo.update_sync_metadata(status=SyncStatus.IN_PROGRESS.value)
         meta = await self.repo.get_sync_metadata()
 
         if meta and meta.last_changed_at:
@@ -81,7 +82,7 @@ class SyncService:
 
             await self.repo.commit()
             await self.repo.update_sync_metadata(
-                status="success",
+                status=SyncStatus.SUCCESS.value,
                 last_sync=datetime.now(UTC),
                 last_changed=max_changed_at
             ) 
@@ -89,7 +90,7 @@ class SyncService:
 
 
         except Exception as e:
-            await self.repo.update_sync_metadata(status="failed")
+            await self.repo.update_sync_metadata(status=SyncStatus.FAILED.value)
             logger.error("Ошибка: %s", e, exc_info=True)
             raise 
 

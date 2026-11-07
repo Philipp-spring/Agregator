@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.enums import SyncStatus
 from app.models import Event, SyncMetadata
 
 
@@ -53,7 +54,7 @@ class SQLAlchemyEventRepository:
         res = await self.db.scalars(stmt)
         meta = res.first()
         if not meta:
-            meta = SyncMetadata(id=1, sync_status="idle")
+            meta = SyncMetadata(id=1, sync_status=SyncStatus.IDLE.value)
             self.db.add(meta)
             await self.db.commit()
         return meta

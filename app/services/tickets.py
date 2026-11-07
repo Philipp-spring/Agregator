@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import httpx
 
 from app.clients.provider import EventsProviderClient
+from app.enums import EventStatus
 from app.exceptions import (
     EventNotFoundError,
     EventNotPublishedError,
@@ -12,6 +13,7 @@ from app.exceptions import (
     RegistrationDeadlinePassedError,
     SeatNotAvailableError,
     TicketIdMissingError,
+    TicketNotFoundError,
 )
 from app.repositories.tickets import SQLAlchemyTicketRepository
 
@@ -30,7 +32,7 @@ class TicketService:
             logger.warning("Попытка регистрации на несуществующее событие %s", event_id)
             raise EventNotFoundError("Событие не найдено")
 
-        if event.status != "published":
+        if event.status != EventStatus.PUBLISHED.value:
             raise EventNotPublishedError("Регистрация доступна только для опубликованных событий")
 
 
@@ -74,3 +76,22 @@ class TicketService:
 
         logger.info("Успешная регистрация билета %s у провайдера и в локальной БД", ticket_id)
         return ticket_id
+
+
+
+
+    async def cancel_ticket(self, ticket_id: uuid.UUID) -> None:
+        """Отмена регистрации (билета): удаление у провайдера и в БД."""
+        ticket = await self.repo.get_ticket_by_id(ticket_id)
+        if not ticket:
+            logger.warning("Попытка отмены несуществующего билета %s", ticket_id)
+            raise TicketNotFoundError("Билет не найден")
+        try:
+            await self.client.unregister(ticket.event_id, ticket_id)
+        except httpx.HTTPError as e:
+            raise ProviderError(f"Не удалось отменить билет у провайдера: {e}")
+
+        await self.repo.delete(ticket_id)
+        await self.repo.db.commit()
+
+        logger.info("Билет %s успешно отменён", ticket_id)

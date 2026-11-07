@@ -31,3 +31,8 @@ class TicketIdMissingError(DomainError):
 class ProviderError(DomainError):
     """Ошибка при обращении к внешнему API провайдера"""
     pass
+
+
+class TicketNotFoundError(DomainError):
+    """Билет не найден в базе данных"""
+    pass

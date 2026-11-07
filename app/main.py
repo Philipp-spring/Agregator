@@ -14,6 +14,7 @@ from app.exceptions import (
     RegistrationDeadlinePassedError,
     SeatNotAvailableError,
     TicketIdMissingError,
+    TicketNotFoundError,
 )
 from app.routers import events, system, tickets
 from app.workers import run_sync_periodically
@@ -75,13 +76,17 @@ async def h_provider(request: Request, exc: ProviderError):
     return JSONResponse(status_code=502, content={"detail": str(exc)})
 
 
+@app.exception_handler(TicketNotFoundError)
+async def h_ticket_not_found(request: Request, exc: TicketNotFoundError):
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
-        status_code=400,
+        status_code=400, 
         content={"detail": "Ошибка валидации входных данных"},
-    )
+        )
 
 
 
