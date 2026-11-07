@@ -37,7 +37,7 @@ class EventService:
 
 
     async def get_available_seats(self, event_id: uuid.UUID):
-        """показ список свободных мест  (связывает БД и Внешний API)"""
+        """показ список свободных мест (связывает(использует) БД и Внешний API)"""
         event = await self.repo.get_event_by_id(event_id)
         if not event:
             raise EventNotFoundError("Событие не найдено")

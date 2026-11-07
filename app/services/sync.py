@@ -24,6 +24,7 @@ class SyncService:
 
 
     async def sync_events(self):
+        """Синхронизация"""
         await self.repo.update_sync_metadata(status="in_progress")
         meta = await self.repo.get_sync_metadata()
 

@@ -16,7 +16,7 @@ class EventsProviderClient:
 
 
     async def get_events(self, changed_at: str = "2000-01-01", cursor: str | None = None):
-        """Получение мероприятий"""
+        """Получение мероприятий от внешнего API"""
         if cursor:
             if "events-provider" in cursor:
                 cursor = cursor.replace("https://events-provider.dev-2.python-labs.ru",  settings.api_base_url)

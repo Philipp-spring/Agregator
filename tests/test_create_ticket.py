@@ -17,7 +17,6 @@ async def test_create_ticket_success():
     mock_repo = AsyncMock(spec=SQLAlchemyTicketRepository)
     mock_client = AsyncMock(spec=EventsProviderClient)
     
-    # Добавляем мок для db
     mock_repo.db = AsyncMock()
 
     event_id = uuid.uuid4()
