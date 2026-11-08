@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         if self.postgres_connection_string:
-            return self.postgres_connection_string
+            conn_str = self.postgres_connection_string
+            if conn_str.startswith("postgres://"):
+                conn_str = conn_str.replace("postgres://", "postgresql+asyncpg://", 1)
+            return conn_str
         return (
             f"postgresql+asyncpg://{self.postgres_username}:"
             f"{self.postgres_password}@{self.postgres_host}:"
