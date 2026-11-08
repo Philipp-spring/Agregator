@@ -71,7 +71,7 @@ jobs:
             type=sha,prefix={{branch}}-
 
       - name: Build and push
-        uses: docker/build-push-action@v7 # собирает Docker-образ и загружает его на склад (в реестр ghcr.io).
+        uses: docker/build-push-action@v7 
         with:
           context: .
           platforms: linux/arm64,linux/amd64

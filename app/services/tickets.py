@@ -19,14 +19,16 @@ from app.repositories.tickets import SQLAlchemyTicketRepository
 
 logger = logging.getLogger(__name__)
 
+
 class TicketService:
     """Бизнес-сценарий создания билета с интеграцией провайдера."""
-
     def __init__(self, client: EventsProviderClient, repo: SQLAlchemyTicketRepository):
         self.client = client
         self.repo = repo
 
-    async def create_ticket(self, event_id: uuid.UUID, first_name: str, last_name: str, email: str, seat: str) -> str:
+    async def create_ticket(
+        self, event_id: uuid.UUID, first_name: str, last_name: str, email: str, seat: str
+    ) -> str:
         event = await self.repo.get_event(event_id)
         if not event:
             logger.warning("Попытка регистрации на несуществующее событие %s", event_id)
@@ -34,7 +36,6 @@ class TicketService:
 
         if event.status != EventStatus.PUBLISHED.value:
             raise EventNotPublishedError("Регистрация доступна только для опубликованных событий")
-
 
         now = datetime.now(UTC)
         deadline = event.registration_deadline.astimezone(UTC)
@@ -54,7 +55,7 @@ class TicketService:
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
-                seat=seat
+                seat=seat,
             )
         except httpx.HTTPError as e:
             raise ProviderError(f"Ошибка регистрации: {e}")
@@ -69,16 +70,13 @@ class TicketService:
             first_name=first_name,
             last_name=last_name,
             email=email,
-            seat=seat
+            seat=seat,
         )
 
-        await self.repo.db.commit()
+        await self.repo.commit()
 
         logger.info("Успешная регистрация билета %s у провайдера и в локальной БД", ticket_id)
         return ticket_id
-
-
-
 
     async def cancel_ticket(self, ticket_id: uuid.UUID) -> None:
         """Отмена регистрации (билета): удаление у провайдера и в БД."""
@@ -92,6 +90,6 @@ class TicketService:
             raise ProviderError(f"Не удалось отменить билет у провайдера: {e}")
 
         await self.repo.delete(ticket_id)
-        await self.repo.db.commit()
+        await self.repo.commit()
 
         logger.info("Билет %s успешно отменён", ticket_id)

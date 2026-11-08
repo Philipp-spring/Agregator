@@ -43,8 +43,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="agregator", version="0.1.0", lifespan=lifespan)
 
 
-
-
 @app.exception_handler(EventNotFoundError)
 async def h_event_not_found(request: Request, exc: EventNotFoundError):
     """Событие не найдено в базе данных"""
@@ -84,10 +82,9 @@ async def h_ticket_not_found(request: Request, exc: TicketNotFoundError):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
-        status_code=400, 
+        status_code=400,
         content={"detail": "Ошибка валидации входных данных"},
-        )
-
+    )
 
 
 app.include_router(events.router)

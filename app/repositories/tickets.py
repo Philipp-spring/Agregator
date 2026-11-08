@@ -18,16 +18,21 @@ class SQLAlchemyTicketRepository:
         event = await self.db.scalars(stmt)
         return event.first()
 
-
     async def get_ticket_by_id(self, ticket_id: uuid.UUID) -> Ticket | None:
         """Получить билет из БД по его ID"""
         stmt = select(Ticket).where(Ticket.id == ticket_id)
         res = await self.db.scalars(stmt)
         return res.first()
-    
 
-
-    async def create(self, event_id: uuid.UUID, ticket_id: uuid.UUID, first_name: str, last_name: str, email: str, seat: str) -> None:
+    async def create(
+        self,
+        event_id: uuid.UUID,
+        ticket_id: uuid.UUID,
+        first_name: str,
+        last_name: str,
+        email: str,
+        seat: str,
+    ) -> None:
         """Создание и сохранение объекта билета в локальную БД после ответа от внешнего API."""
         new_ticket = Ticket(
             id=ticket_id,
@@ -36,12 +41,9 @@ class SQLAlchemyTicketRepository:
             last_name=last_name,
             email=email,
             seat=seat,
-
         )
         self.db.add(new_ticket)
         await self.db.flush()
-
-
 
     async def delete(self, ticket_id: uuid.UUID) -> None:
         """Жесткое удаление билета при отмене"""
@@ -50,3 +52,7 @@ class SQLAlchemyTicketRepository:
         if ticket:
             await self.db.delete(ticket)
             await self.db.flush()
+
+
+    async def commit(self) -> None:
+        await self.db.commit()

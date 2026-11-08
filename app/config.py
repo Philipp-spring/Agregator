@@ -1,22 +1,27 @@
-import os
-
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        f"postgresql+asyncpg://{os.getenv('POSTGRES_USERNAME', 'postgres')}:"
-        f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
-        f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
-        f"{os.getenv('POSTGRES_PORT', '5432')}/"
-        f"{os.getenv('POSTGRES_DATABASE_NAME', 'aggregator_db')}"
+    postgres_username: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_database_name: str = "aggregator_db"
+    api_key: str = "YOUR_API_KEY"
+    api_base_url: str = (
+        "http://student-system-events-provider-web.student-system-events-provider.svc:8000"
     )
 
-    api_key: str = "YOUR_API_KEY"
-    api_base_url: str = "http://student-system-events-provider-web.student-system-events-provider.svc:8000"
-
-
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @computed_field
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.postgres_username}:"
+            f"{self.postgres_password}@{self.postgres_host}:"
+            f"{self.postgres_port}/{self.postgres_database_name}"
+        )
 
 settings = Settings()

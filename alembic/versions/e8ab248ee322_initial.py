@@ -1,8 +1,8 @@
-"""init
+"""initial
 
-Revision ID: 785622812f39
+Revision ID: e8ab248ee322
 Revises: 
-Create Date: 2026-11-03 16:53:26.669954
+Create Date: 2026-11-08 21:24:43.592221
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '785622812f39'
+revision: str = 'e8ab248ee322'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,7 +33,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('last_sync_time', sa.DateTime(timezone=True), nullable=True),
     sa.Column('last_changed_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('sync_status', sa.String(), nullable=False),
+    sa.Column('sync_status', sa.Enum('IDLE', 'IN_PROGRESS', 'SUCCESS', 'FAILED', name='syncstatus', native_enum=False, length=50), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('events',
@@ -42,7 +42,7 @@ def upgrade() -> None:
     sa.Column('place_id', sa.UUID(), nullable=False),
     sa.Column('event_time', sa.DateTime(timezone=True), nullable=False),
     sa.Column('registration_deadline', sa.DateTime(timezone=True), nullable=False),
-    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('status', sa.Enum('NEW', 'PUBLISHED', 'REGISTRATION_CLOSED', 'FINISHED', name='eventstatus', native_enum=False, length=50), nullable=False),
     sa.Column('number_of_visitors', sa.Integer(), server_default=sa.text('0'), nullable=False),
     sa.Column('changed_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['place_id'], ['places.id'], ),

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 async def run_sync_periodically():
-    """Бесконечный цикл, который дергает синхронизацию каждые N минут"""
+    """Бесконечный цикл, который дергает синхронизацию раз в сутки (24 часа)"""
     while True:
         try:
             logger.info("Запуск фоновой синхронизации...")
@@ -21,7 +21,6 @@ async def run_sync_periodically():
                     await service.sync_events()
                     logger.info("Синхронизация завершена")
         except Exception as e:
-            logger.error("Ошибка в воркере: %s" , e, exc_info=True)
-
+            logger.error("Ошибка в воркере: %s", e, exc_info=True)
 
         await asyncio.sleep(86400)

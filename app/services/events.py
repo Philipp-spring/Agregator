@@ -2,7 +2,6 @@ import logging
 import uuid
 
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache import get_cached_seats, set_cached_seats
 from app.clients.provider import EventsProviderClient
@@ -13,21 +12,17 @@ from app.repositories.events import SQLAlchemyEventRepository
 logger = logging.getLogger(__name__)
 
 
-
 class EventService:
-    def __init__(self, db: AsyncSession, client: EventsProviderClient):
-        self.repo = SQLAlchemyEventRepository(db)
+    def __init__(self, repo: SQLAlchemyEventRepository, client: EventsProviderClient):
+        self.repo = repo
         self.client = client
-
 
     async def list_events(self, page, page_size, date_from=None):
         """функция для эндпоинта, который показывает список всех событий в БД"""
         events, total = await self.repo.get_events_with_filters(
-                page=page, page_size=page_size, date_from=date_from
+            page=page, page_size=page_size, date_from=date_from
         )
         return {"count": total, "results": events}
-
-
 
     async def get_event_details(self, event_id: uuid.UUID):
         """функция для эндпоинта, который показывает одно конкретное событие в БД"""
@@ -36,7 +31,6 @@ class EventService:
             raise EventNotFoundError("Событие не найдено")
         return event
 
-
     async def get_available_seats(self, event_id: uuid.UUID):
         """показ список свободных мест (связывает(использует) БД и Внешний API)"""
         event = await self.repo.get_event_by_id(event_id)
@@ -44,7 +38,6 @@ class EventService:
             raise EventNotFoundError("Событие не найдено")
         if event.status != EventStatus.PUBLISHED.value:
             raise EventNotPublishedError("Событие не опубликовано")
-
 
         cached_data = get_cached_seats(event_id)
         if cached_data is not None:
