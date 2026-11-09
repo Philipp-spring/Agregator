@@ -3,17 +3,10 @@ from uuid import UUID
 
 import httpx
 
-from app.config import settings
-
 
 class EventsProviderClient:
-    def __init__(self):
-
-        self.client = httpx.AsyncClient(
-            base_url=settings.api_base_url,
-            headers={"x-api-key": settings.api_key},
-            timeout=httpx.Timeout(10.0, connect=5.0),
-        )
+    def __init__(self, client: httpx.AsyncClient):
+        self.client = client
 
     async def get_events(self, changed_at: str = "2000-01-01", cursor: str | None = None):
         """Получение мероприятий от внешнего API"""

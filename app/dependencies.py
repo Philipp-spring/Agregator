@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.provider import EventsProviderClient
@@ -10,12 +10,8 @@ from app.services.sync import SyncService
 from app.services.tickets import TicketService
 
 
-async def get_events_client():
-    client = EventsProviderClient()
-    try:
-        yield client
-    finally:
-        await client.close()
+async def get_events_client(request: Request):
+    return EventsProviderClient(request.app.state.http_client)
 
 
 async def get_event_service(

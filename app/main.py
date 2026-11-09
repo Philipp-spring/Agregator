@@ -2,10 +2,12 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.config import settings
 from app.database import async_engine
 from app.exceptions import (
     EventNotFoundError,
@@ -26,6 +28,13 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Приложение запущено")
+
+    app.state.http_client = httpx.AsyncClient(
+        base_url=settings.api_base_url,
+        headers={"x-api-key": settings.api_key},
+        timeout=httpx.Timeout(10.0, connect=5.0),
+    )
+
     sync_task = asyncio.create_task(run_sync_periodically())
     logger.info("Фоновая синхронизация запущена!")
     yield
@@ -36,6 +45,7 @@ async def lifespan(app: FastAPI):
     except asyncio.CancelledError:
         pass
 
+    await app.state.http_client.aclose()
     await async_engine.dispose()
     logger.info("Соединения с БД закрыты")
 

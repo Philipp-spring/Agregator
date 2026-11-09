@@ -25,10 +25,12 @@ async def test_get_events_success(httpx_mock, events_url):
         status_code=200
     )
 
-    client = EventsProviderClient()
-    result = await client.get_events(changed_at="2000-01-01")
-    assert result["results"][0]["name"] == "Тест"
-    await client.close()
+    client = EventsProviderClient(httpx.AsyncClient(base_url=settings.api_base_url))
+    try:
+        result = await client.get_events(changed_at="2000-01-01")
+        assert result["results"][0]["name"] == "Тест"
+    finally:
+        await client.close()
 
 
 @pytest.mark.asyncio
@@ -41,12 +43,12 @@ async def test_get_events_server_error(httpx_mock, events_url):
         status_code=500
     )
 
-    client = EventsProviderClient()
-
-    with pytest.raises(httpx.HTTPStatusError):
-        await client.get_events(changed_at="2000-01-01")
-        
-    await client.close()
+    client = EventsProviderClient(httpx.AsyncClient(base_url=settings.api_base_url))
+    try:
+        with pytest.raises(httpx.HTTPStatusError):
+            await client.get_events(changed_at="2000-01-01")
+    finally:   
+        await client.close()
 
 
 @pytest.mark.asyncio
@@ -58,8 +60,7 @@ async def test_get_seats_success():
         raise_for_status=lambda: None,
     )
 
-    client = EventsProviderClient()
-    client.client = mock_client
+    client = EventsProviderClient(mock_client)
 
     result = await client.get_seats(uuid.uuid4())
     assert result["seats"] == ["A1", "A2"]
@@ -74,8 +75,7 @@ async def test_register_success():
         raise_for_status=lambda: None,
     )
 
-    client = EventsProviderClient()
-    client.client = mock_client
+    client = EventsProviderClient(mock_client)
 
     result = await client.register(
         uuid.uuid4(), "Иван", "Петров", "A1", "ivan@example.com"
@@ -92,8 +92,7 @@ async def test_unregister_success():
         raise_for_status=lambda: None,
     )
 
-    client = EventsProviderClient()
-    client.client = mock_client
+    client = EventsProviderClient(mock_client)
 
     result = await client.unregister(uuid.uuid4(), uuid.uuid4())
     assert result["success"] is True
@@ -108,8 +107,7 @@ async def test_get_events_with_cursor():
         raise_for_status=lambda: None,
     )
 
-    client = EventsProviderClient()
-    client.client = mock_client
+    client = EventsProviderClient(mock_client)
 
     cursor = "https://events-provider.dev-2.python-labs.ru/api/events/?cursor=xyz"
     result = await client.get_events(cursor=cursor)

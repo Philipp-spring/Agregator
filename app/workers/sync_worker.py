@@ -1,7 +1,10 @@
 import asyncio
 import logging
 
+import httpx
+
 from app.clients.provider import EventsProviderClient
+from app.config import settings
 from app.database import async_session_maker
 from app.repositories.events import SQLAlchemyEventRepository
 from app.services.sync import SyncService
@@ -15,7 +18,13 @@ async def run_sync_periodically():
         try:
             logger.info("Запуск фоновой синхронизации...")
             async with async_session_maker() as db:
-                async with EventsProviderClient() as client:
+                async with httpx.AsyncClient(
+                    base_url=settings.api_base_url,
+                    headers={"x-api-key": settings.api_key},
+                    timeout=httpx.Timeout(10.0, connect=5.0),
+                ) as raw_client:
+                    client = EventsProviderClient(raw_client)
+                    
                     repo = SQLAlchemyEventRepository(db)
                     service = SyncService(repo=repo, client=client)
                     await service.sync_events()
